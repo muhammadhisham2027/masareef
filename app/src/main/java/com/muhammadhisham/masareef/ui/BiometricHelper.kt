@@ -1,0 +1,45 @@
+package com.muhammadhisham.masareef.ui
+
+import android.content.Context
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+
+object BiometricHelper {
+
+    fun isAvailable(context: Context): Boolean {
+        val mgr = BiometricManager.from(context)
+        return mgr.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_WEAK
+        ) == BiometricManager.BIOMETRIC_SUCCESS
+    }
+
+    fun authenticate(
+        activity: FragmentActivity,
+        onSuccess: () -> Unit,
+        onFail: () -> Unit
+    ) {
+        val executor = ContextCompat.getMainExecutor(activity)
+        val callback = object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                onSuccess()
+            }
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                onFail()
+            }
+            override fun onAuthenticationFailed() {
+                // individual attempt failed — keep prompt open, BiometricPrompt handles it
+            }
+        }
+
+        val prompt = BiometricPrompt(activity, executor, callback)
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Masareef")
+            .setSubtitle("Verify your identity")
+            .setNegativeButtonText("Cancel")
+            .build()
+
+        prompt.authenticate(info)
+    }
+}
